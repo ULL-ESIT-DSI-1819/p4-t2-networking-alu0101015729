@@ -39,5 +39,68 @@ To see how the net module uses Unix sockets, let’s modify the net-watcher prog
 # Implementing a Messaging Protocol
 In this section we’ll design and implement a better protocol.A protocol is a set of rules that defines how endpoints in a system communicate.Any time you develop a networked application in Node.js, you’re working with one or more protocols.Here we’ll create a protocol based on passing JSON messages over TCP.JSON is incredibly prevalent in Node.js.We’ll use it extensively for data serialization and configuration throughout the book.
 # Serializing Messages with JSON
+ Let’s develop the message-passing protocol that uses JSON to serialize messages. Each message is a JSON-serialized object, which is a hash of key-value pairs. Here’s an example JSON object with two key-value pairs:
+ 	
+    {"key":"value","anotherKey":"anotherValue"}
 
+The net-watcher service we’ve been developing in this chapter sends two kinds of messages that we need to convert to JSON:
+
+   When the connection is first established, the client receives the string Now watching "target.txt" for changes.... We’ll encode the first kind of message this way:
+ 	
+    {"type":"watching","file":"target.txt"}
+
+The type field indicates that this is a watching message—the specified file is now being watched.
+
+   Whenever the target file changes, the client receives a string like this: File changed: Fri Dec 18 2015 05:44:00 GMT-0500 (EST). Encoded this way:
+ 	{"type":"changed","timestamp":1358175733785}
+
+Here the type field announces that the target file has changed. The timestamp field contains an integer value representing the number of milliseconds since midnight, January 1, 1970.This happens to be an easy time format to work with in JavaScript.
+# Switching to JSON Messages
+Now that we’ve defined an improved, computer-accessible protocol, let’s modify the net-watcher service to use it.Then we’ll create client programs that receive and interpret these messages. Open your editor to the net-watcher.js program. Find the following line:
+
+    connection.write(`Now watching " ${filename} " for changes...\n );
+
+And replace it with this:
+	
+    connection.write(JSON.stringify({type: 'watching', file: filename}) + '\n');
+
+Next, find the call to connection.write inside the watcher:
+ 	
+    const watcher =
+ 	  fs.watch(filename, () => connection.write(`File changed: ${new Date()}\n`));
+
+And replace it with this:
+ 	
+    const watcher = fs.watch(filename, () => connection.write(
+ 	    JSON.stringify({type: 'changed', timestamp: Date.now()}) + '\n'));
+
+Save this updated file as net-watcher-json-service.js. Run the new program as always, remembering to specify a target file:
+ 	
+    $ node net-watcher-json-service.js target.txt
+	Listening for subscribers...
+
+Then connect using netcat from a second terminal:
+ 	
+    $ nc localhost 60300
+ 	{"type":"watching","file":"target.txt"}
+
+When you touch the target.txt file, you’ll see output like this from your client:
+#captura
+
+Now we’re ready to write a client program that processes these messages.
+# Creating Socket Client Connections
+In this chapter, we’ve explored the server side of Node.js sockets.Here we’ll write a client program in Node.js to receive JSON messages from our net-watcher-json-service program.We’ll start with a naive implementation, and then improve upon it through the rest of the chapter.Open an editor, insert this and save as net-watcher-json-client.js:
+#captura
+This short program uses net.connect to create a client connection to localhost port 60300, then waits for data. The client object is a Socket, just like the incoming connection we saw on the server side.
+
+Whenever a data event happens, our callback function takes the incoming buffer object, parses the JSON message, and then logs an appropriate message to the console.
+
+To run the program, first make sure the net-watcher-json-service is running. Then, in another terminal, run the client:
+
+    $ node net-watcher-json-client.js
+ 	Now watching: target.txt
+
+If you touch the target file, you’ll see output like this:
+#captura
+This program works, but it’s far from perfect.Consider what happens when the connection ends or if it fails to connect in the first place.This program listens for only data events, not end events or error events.We could listen for these events and take appropriate action when they happen.
 # Travis
