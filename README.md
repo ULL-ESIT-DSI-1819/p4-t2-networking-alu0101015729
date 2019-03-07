@@ -36,4 +36,8 @@ El resultado quedara algo como esto:
 The net-watcher process (box) binds a TCP port and watches a file—both resources are shown as ovals.Multiple subscribers can connect and receive updates simultaneously.If you open additional terminals and connect to port 60300 with nc, they’ll all receive updates when the target file changes.TCP sockets are useful for communicating between networked computers.But if you need processes on the same computer to communicate, Unix sockets offer a more efficient alternative.
 # Listening on Unix Sockets
 To see how the net module uses Unix sockets, let’s modify the net-watcher program to use this kind of communication channel.Keep in mind that Unix sockets work only on Unix-like environments.
+# Implementing a Messaging Protocol
+In this section we’ll design and implement a better protocol.A protocol is a set of rules that defines how endpoints in a system communicate.Any time you develop a networked application in Node.js, you’re working with one or more protocols.Here we’ll create a protocol based on passing JSON messages over TCP.JSON is incredibly prevalent in Node.js.We’ll use it extensively for data serialization and configuration throughout the book.
+# Serializing Messages with JSON
+
 # Travis
