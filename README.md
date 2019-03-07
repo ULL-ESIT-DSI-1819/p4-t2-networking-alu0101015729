@@ -12,7 +12,7 @@ In Node.js, the bind and connect operations are provided by the net module.Bindi
 ```
 The net.createServer method takes a callback function and returns a Server object.Node.js will invoke the callback function whenever another endpoint connects.The connection parameter is a Socket object that you can use to send or receive data.
 Calling server.listen binds the specified port. In this case, we’re binding TCP port number 60300. To get an idea of the setup, take a look at the figure.The figure shows our one Node.js process whose server binds a TCP port.Any number of clients—which may or may not be Node.js processes—can connect to that bound port.
-# captura
+![HTML](capturas/tcp.png) <br>
 # Writing Data To A Socket
 At the top, we pull in the Node.js core modules fs and net.The name of the file to watch, if supplied, will be the third (index 2) argument in process.argv.If the user didn’t supply a target file to watch, then we throw a custom Error.
 Now let’s take a look inside the callback function given to createServer.This callback function does three things:It reports that the connection has been established (both to the client with connection.write and to the console).It begins listening for changes to the target file, saving the returned watcher object.This callback sends change information to the client using connection.write.It listens for the connection’s close event so it can report that the subscriber has disconnected and stop watching the file, with watcher.close.Finally, notice the callback passed into server.listen at the end.Node.js invokes this function after it has successfully bound port 60300 and is ready to start receiving connections.
