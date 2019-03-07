@@ -1,7 +1,7 @@
 # p4-t2-networking-alu0101015729
 # Binding A Server To A TCP Port 
-TCP socket connections consist of two endpoints. One endpoint binds to a numbered port while the other endpoint connects to a port.
-In Node.js, the bind and connect operations are provided by the net module.Binding a TCP port to listen for connections looks like this:
+Las conexiones de socket TCP constan de dos puntos finales. Un punto extremo se enlaza a un puerto numerado, mientras que el otro punto extremo se conecta a un puerto.
+En Node.js, las operaciones de enlace y conexión son proporcionadas por el módulo net. El enlace a un puerto TCP para escuchar las conexiones se ve así:
 ```javascript
     'use strict';
     const net = require('net'),
@@ -10,97 +10,115 @@ In Node.js, the bind and connect operations are provided by the net module.Bindi
     });
     server.listen(60300);
 ```
-The net.createServer method takes a callback function and returns a Server object.Node.js will invoke the callback function whenever another endpoint connects.The connection parameter is a Socket object that you can use to send or receive data.
-Calling server.listen binds the specified port. In this case, we’re binding TCP port number 60300. To get an idea of the setup, take a look at the figure.The figure shows our one Node.js process whose server binds a TCP port.Any number of clients—which may or may not be Node.js processes—can connect to that bound port.
+El método net.createServer toma una función de devolución de llamada y devuelve un objeto Server.Node.js que invocará la función de devolución de llamada cuando otro punto extremo se conecte. El parámetro de conexión es un objeto Socket que se puede usar para enviar o recibir datos.
+Al llamar a server.listen se une al puerto especificado. En este caso, estamos vinculando el número de puerto TCP 60300. Para tener una idea de la configuración, eche un vistazo a la figura. La figura muestra nuestro único proceso Node.js cuyo servidor vincula un puerto TCP. Cualquier número de clientes, que pueden o no ser procesos de Node.js: pueden conectarse a ese puerto vinculado.
 ![HTML](capturas/tcp.png) <br>
 # Writing Data To A Socket
-At the top, we pull in the Node.js core modules fs and net.The name of the file to watch, if supplied, will be the third (index 2) argument in process.argv.If the user didn’t supply a target file to watch, then we throw a custom Error.
-Now let’s take a look inside the callback function given to createServer.This callback function does three things:It reports that the connection has been established (both to the client with connection.write and to the console).It begins listening for changes to the target file, saving the returned watcher object.This callback sends change information to the client using connection.write.It listens for the connection’s close event so it can report that the subscriber has disconnected and stop watching the file, with watcher.close.Finally, notice the callback passed into server.listen at the end.Node.js invokes this function after it has successfully bound port 60300 and is ready to start receiving connections.
+En la parte superior, introducimos los módulos principales de Node.js(fs y net). El nombre del archivo que se va a ver, si se proporciona, será el tercer argumento en process.argv. Si el usuario no proporcionó un archivo de destino para ver,lanzamos un error personalizado.
+Ahora echemos un vistazo dentro de la función de devolución de llamada dada a createServer. Esta función de devolución de llamada hace tres cosas: Informa que la conexión se ha establecido (tanto para el cliente con connection.write como para la consola). Comienza a escuchar los cambios en el archivo de destino, guardando el objeto del observador devuelto. Esta devolución de llamada envía información de cambio al cliente usando connection.write. Escucha el evento de cierre de la conexión para informar que el suscriptor se ha desconectado y deja de ver el archivo, con watcher.close.Finalmente,observe que la devolución de llamada pasada a server.listen,al final, Node.js invoca esta función después de que haya enlazado correctamente el puerto 60300 y esté lista para comenzar a recibir conexiones.
 
 # Connecting to a TCP Socket Server with Netcat
-To run and test the net-watcher program, you’ll need three terminal sessions: one for the service itself, one for the client, and one to trigger changes to the watched file.
-In your first terminal, use the watch command to touch the target file at one-second intervals:           
+Para ejecutar y probar el programa net-watcher, necesitará tres sesiones de terminal: una para el servicio en sí, una para el cliente y otra para activar los cambios en el archivo visto.
+En su primer terminal, use el comando watch para tocar el archivo de destino a intervalos de un segundo:        
 ```javascript
     $ watch -n 1 touch target.txt
 ```
-With that running, in a second terminal, run the net-watcher program:
+Con eso funcionando, en un segundo terminal, ejecute el programa net-watcher:
 ```javascript
     $ node net-watcher.js target.txt 
 ```
-This program creates a service listening on TCP port 60300.To connect to it, we’ll use netcat, a socket utility program.Open a third terminal and use the nc command like so:
+Este programa crea un servicio de escucha en el puerto TCP 60300. Para conectarse a él, usaremos netcat, un programa de utilidad de socket. Abra un tercer terminal y use el comando nc de esta manera:
 ```javascript
 $ nc localhost 60300
 ```
 El resultado quedara algo como esto:
 ![HTML](capturas/primero.png) <br>
-The net-watcher process (box) binds a TCP port and watches a file—both resources are shown as ovals.Multiple subscribers can connect and receive updates simultaneously.If you open additional terminals and connect to port 60300 with nc, they’ll all receive updates when the target file changes.TCP sockets are useful for communicating between networked computers.But if you need processes on the same computer to communicate, Unix sockets offer a more efficient alternative.
+El proceso de net-watcher une un puerto TCP y observa un archivo; ambos recursos se muestran como óvalos. Los suscriptores múltiples pueden conectarse y recibir actualizaciones simultáneamente. Si abre terminales adicionales y se conecta al puerto 60300 con nc, todos reciba actualizaciones cuando el archivo de destino cambie. Los sockets TCP son útiles para la comunicación entre computadoras conectadas en red. Pero si necesita procesos en la misma computadora para comunicarse, los sockets Unix ofrecen una alternativa más eficiente.
 # Listening on Unix Sockets
-To see how the net module uses Unix sockets, let’s modify the net-watcher program to use this kind of communication channel.Keep in mind that Unix sockets work only on Unix-like environments.
+Para ver cómo el net module usa sockets Unix, modifiquemos el programa net-watcher para usar este tipo de canal de comunicación. Tenga en cuenta que los sockets de Unix solo funcionan en entornos similares a Unix.
+![HTML](capturas/segunda.png) <br>
 # Implementing a Messaging Protocol
-In this section we’ll design and implement a better protocol.A protocol is a set of rules that defines how endpoints in a system communicate.Any time you develop a networked application in Node.js, you’re working with one or more protocols.Here we’ll create a protocol based on passing JSON messages over TCP.JSON is incredibly prevalent in Node.js.We’ll use it extensively for data serialization and configuration throughout the book.
+En esta sección diseñaremos e implementaremos un mejor protocolo. Un protocolo es un conjunto de reglas que define cómo se comunican los puntos finales en un sistema. Cada vez que desarrolle una aplicación en red en Node.js, estará trabajando con uno o más protocolos. Aquí crearemos un protocolo basado en pasar mensajes JSON a través de TCP. JSON prevalece increíblemente en Node.js. Lo usaremos ampliamente para la serialización y configuración de datos en todo el libro.
 # Serializing Messages with JSON
- Let’s develop the message-passing protocol that uses JSON to serialize messages. Each message is a JSON-serialized object, which is a hash of key-value pairs. Here’s an example JSON object with two key-value pairs:
+ Vamos a desarrollar el protocolo de paso de mensajes que utiliza JSON para serializar los mensajes. Cada mensaje es un objeto serializado JSON, que es un hash de pares clave-valor. Aquí hay un ejemplo de objeto JSON con dos pares clave-valor:
  	
     {"key":"value","anotherKey":"anotherValue"}
 
-The net-watcher service we’ve been developing in this chapter sends two kinds of messages that we need to convert to JSON:
-
-   When the connection is first established, the client receives the string Now watching "target.txt" for changes.... We’ll encode the first kind of message this way:
+El net-watcher service que hemos estado desarrollando en este capítulo envía dos tipos de mensajes que necesitamos convertir a JSON.
+	Cuando se establece la conexión por primera vez, el cliente recibe la cadena: Now watching target.txt for changes... Codificaremos el primer tipo de mensaje de esta manera:
  	
     {"type":"watching","file":"target.txt"}
 
-The type field indicates that this is a watching message—the specified file is now being watched.
+El campo de tipo indica que este es un mensaje de observación: el archivo especificado ahora se está viendo.
 
-   Whenever the target file changes, the client receives a string like this: File changed: Fri Dec 18 2015 05:44:00 GMT-0500 (EST). Encoded this way:
+   Cuando el archivo de destino cambia, el cliente recibe una cadena como esta: File changed: Fri Dec 18 2015 05:44:00 GMT-0500 (EST). Codificado de esta manera:
+   
  	{"type":"changed","timestamp":1358175733785}
 
-Here the type field announces that the target file has changed. The timestamp field contains an integer value representing the number of milliseconds since midnight, January 1, 1970.This happens to be an easy time format to work with in JavaScript.
+Aquí el campo de tipo anuncia que el archivo de destino ha cambiado. El campo de marca de tiempo contiene un valor entero que representa el número de milisegundos desde la medianoche del 1 de enero de 1970. Esto resulta ser un formato de tiempo fácil para trabajar en JavaScript.
 # Switching to JSON Messages
-Now that we’ve defined an improved, computer-accessible protocol, let’s modify the net-watcher service to use it.Then we’ll create client programs that receive and interpret these messages. Open your editor to the net-watcher.js program. Find the following line:
-
+Ahora que hemos definido un protocolo mejorado y accesible por computadora, modifiquemos el servicio de net-watcher para usarlo. Luego, crearemos programas cliente que recibirán e interpretarán estos mensajes. Abra su editor en el programa net-watcher.js. Encuentra la siguiente línea:
+    
     connection.write(`Now watching " ${filename} " for changes...\n );
 
-And replace it with this:
+Y reemplazarlo con esto:
 	
     connection.write(JSON.stringify({type: 'watching', file: filename}) + '\n');
 
-Next, find the call to connection.write inside the watcher:
+A continuación, busque la llamada a connection.write dentro del watcher:
  	
     const watcher =
  	  fs.watch(filename, () => connection.write(`File changed: ${new Date()}\n`));
 
-And replace it with this:
+Y reemplazarlo con esto:
  	
     const watcher = fs.watch(filename, () => connection.write(
  	    JSON.stringify({type: 'changed', timestamp: Date.now()}) + '\n'));
 
-Save this updated file as net-watcher-json-service.js. Run the new program as always, remembering to specify a target file:
+Guarde este archivo actualizado como net-watcher-json-service.js. Ejecute el nuevo programa como siempre, recordando especificar un archivo de destino:
  	
     $ node net-watcher-json-service.js target.txt
 	Listening for subscribers...
 
-Then connect using netcat from a second terminal:
+Luego conecte usando netcat desde un segundo terminal:
  	
     $ nc localhost 60300
  	{"type":"watching","file":"target.txt"}
 
-When you touch the target.txt file, you’ll see output like this from your client:
+Cuando creas el archivo target.txt, verás una salida como esta en tu cliente:
 ![HTML](capturas/tercera.png) <br />
 
-Now we’re ready to write a client program that processes these messages.
+Ahora estamos listos para escribir un programa cliente que procesa estos mensajes.
 # Creating Socket Client Connections
-In this chapter, we’ve explored the server side of Node.js sockets.Here we’ll write a client program in Node.js to receive JSON messages from our net-watcher-json-service program.We’ll start with a naive implementation, and then improve upon it through the rest of the chapter.Open an editor, insert this and save as net-watcher-json-client.js:
-#captura
-This short program uses net.connect to create a client connection to localhost port 60300, then waits for data. The client object is a Socket, just like the incoming connection we saw on the server side.
+En este capítulo, hemos explorado el lado del servidor de los sockets Node.js. Aquí escribiremos un programa cliente en Node.js para recibir mensajes JSON de nuestro programa net-watcher-json-service. Comenzaremos con un implementación ingenua, y luego la mejora a través del resto del capítulo. Abra un editor, inserte esto y guárdelo como net-watcher-json-client.js:
+```javascript
+'use strict';
+const net = require('net');
+const client = net.connect({port: 60300}); 
+client.on('data', data => {   
+    const message = JSON.parse(data);
+    if (message.type === 'watching'){     
+        console.log(`Now watching: ${message.file}`);   
+    } 
+    else if (message.type === 'changed') {
+        const date = new Date(message.timestamp);
+        console.log(`File changed: ${date}`);
+    }
+    else {     
+        console.log(`Unrecognized message type: ${message.type}`);   
+    } 
+});
+```
+Este programa corto utiliza net.connect para crear una conexión de cliente al puerto 60300 de localhost, luego espera los datos. El objeto cliente es un Socket, al igual que la conexión entrante que vimos en el lado del servidor.
 
-Whenever a data event happens, our callback function takes the incoming buffer object, parses the JSON message, and then logs an appropriate message to the console.
+Cada vez que ocurre un evento de datos, nuestra función de devolución de llamada toma el objeto de búfer entrante, analiza el mensaje JSON y luego registra un mensaje apropiado en la consola.
 
-To run the program, first make sure the net-watcher-json-service is running. Then, in another terminal, run the client:
+Para ejecutar el programa, primero asegúrese de que net-watcher-json-service se esté ejecutando. Luego, en otro terminal, ejecute el cliente:
 
     $ node net-watcher-json-client.js
  	Now watching: target.txt
 
-If you touch the target file, you’ll see output like this:
+Si toca el archivo de destino, verá una salida como esta:
 #captura
-This program works, but it’s far from perfect.Consider what happens when the connection ends or if it fails to connect in the first place.This program listens for only data events, not end events or error events.We could listen for these events and take appropriate action when they happen.
+Este programa funciona, pero está lejos de ser perfecto. Considere lo que sucede cuando finaliza la conexión o si no se puede conectar en primer lugar. Este programa solo escucha eventos de datos, no eventos finales o eventos de error. Podríamos escuchar estos eventos y tomar las medidas apropiadas cuando suceden.
 # Travis
