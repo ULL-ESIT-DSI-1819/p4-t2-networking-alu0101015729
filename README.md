@@ -32,7 +32,7 @@ This program creates a service listening on TCP port 60300.To connect to it, we�
 $ nc localhost 60300
 ```
 El resultado quedara algo como esto:
-# captura
+![HTML](capturas/primero.png) <br>
 The net-watcher process (box) binds a TCP port and watches a file—both resources are shown as ovals.Multiple subscribers can connect and receive updates simultaneously.If you open additional terminals and connect to port 60300 with nc, they’ll all receive updates when the target file changes.TCP sockets are useful for communicating between networked computers.But if you need processes on the same computer to communicate, Unix sockets offer a more efficient alternative.
 # Listening on Unix Sockets
 To see how the net module uses Unix sockets, let’s modify the net-watcher program to use this kind of communication channel.Keep in mind that Unix sockets work only on Unix-like environments.
@@ -85,7 +85,7 @@ Then connect using netcat from a second terminal:
  	{"type":"watching","file":"target.txt"}
 
 When you touch the target.txt file, you’ll see output like this from your client:
-#captura
+![HTML](capturas/tercera.png) <br />
 
 Now we’re ready to write a client program that processes these messages.
 # Creating Socket Client Connections
