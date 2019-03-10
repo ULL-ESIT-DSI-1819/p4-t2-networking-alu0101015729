@@ -118,7 +118,45 @@ Para ejecutar el programa, primero asegúrese de que net-watcher-json-service se
     $ node net-watcher-json-client.js
  	Now watching: target.txt
 
-Si toca el archivo de destino, verá una salida como esta:
-#captura
 Este programa funciona, pero está lejos de ser perfecto. Considere lo que sucede cuando finaliza la conexión o si no se puede conectar en primer lugar. Este programa solo escucha eventos de datos, no eventos finales o eventos de error. Podríamos escuchar estos eventos y tomar las medidas apropiadas cuando suceden.
+# Testing Network Application Functionality
+Las pruebas funcionales nos aseguran que nuestro código hace lo que esperamos que haga. En esta sección, desarrollaremos una prueba para nuestros programas de cliente y servidor de observación de archivos en red. Crearemos un servidor simulado que se ajuste a nuestro protocolo LDJ al tiempo que exponemos fallas en el cliente.
+Después de que escribamos la prueba, arreglaremos el código del cliente para que pase.
+# Understanding the Message-Boundary Problem
+Cuando desarrollas programas en red en Node.js, a menudo se comunican pasando mensajes. En el mejor de los casos, un mensaje llegará a la vez. Pero a veces los mensajes llegarán en pedazos, divididos en distintos eventos de datos. Para desarrollar aplicaciones en red, deberá lidiar con estas divisiones cuando ocurran.
+El protocolo LDJ que desarrollamos anteriormente separa los mensajes con caracteres de nueva línea. Cada carácter de nueva línea es el límite entre dos mensajes.
+Nuestro programa de cliente actualmente se basa en que analiza cada mensaje enviando el contenido del búfer de datos directamente a JSON.parse.Pero considere lo que sucedería si un mensaje se dividiera por la mitad y llegara como dos eventos de datos separados. Tal división podría ocurrir en la naturaleza, especialmente para mensajes grandes. Creemos un servicio de prueba que envíe un mensaje dividido como este y descubramos cómo responde el cliente.
+# Implementing a Test Service
+Escribir aplicaciones robustas de Node.js significa manejar sin problemas problemas de red como entradas divididas, conexiones rotas y datos erróneos. Aquí implementaremos un servicio de prueba que divide un mensaje a propósito en múltiples partes y lo guardaremos en el archivo llamado test-json-service.js
+Este servicio de prueba difiere de nuestro anterior net-watcher-json-service.js en algunos aspectos. En lugar de configurar un observador del sistema de archivos, como hicimos para el servicio real, aquí solo enviamos el primer fragmento predeterminado de inmediato.
+
+Luego configuramos un temporizador para enviar el segundo fragmento después de un breve retraso. La función de JavaScript setTimeout toma dos parámetros: una función para invocar y una cantidad de tiempo en milisegundos. Después de la cantidad de tiempo especificada, la función será llamada.
+
+Finalmente, cada vez que finaliza la conexión, usamos clearTimeout para cancelar la programación de la devolución de llamada. No es necesario programar la devolución de llamada porque una vez que se cierra la conexión, cualquier llamada a connection.write desencadenará eventos de error.
+
+Finalmente, averigüemos qué sucede cuando nos conectamos con el programa cliente:
+#captura
+El error "SyntaxError: Unexpected token t" nos dice que el mensaje no fue completo y JSON válido. Nuestro cliente intentó enviar la mitad de un mensaje a JSON.parse, que solo espera cadenas JSON completas y con el formato correcto como entrada.
+
+En este punto, hemos simulado con éxito el caso de un mensaje dividido proveniente del servidor. Ahora vamos a arreglar el cliente para trabajar con él.
+# Extending Core Classes in Custom Modules
+En este capítulo, crearemos un módulo que maneja la pieza de búfer de entrada para que el programa principal pueda recibir mensajes completos de manera confiable. A lo largo del camino, tendremos que hablar sobre los módulos personalizados y la extensión de las clases centrales en Node.
+
+Extender EventEmitter
+Para liberar al programa cliente del peligro de dividir los mensajes JSON, implementaremos un módulo de cliente de búfer LDJ. Luego lo incorporaremos al cliente de Network Watcher.
+
+Inheritance in Node
+Primero veamos cómo Node.js hace la herencia. El siguiente código configura LDJClient para heredar de EventEmitter.
+
+	const EventEmitter = require('events').EventEmitter;
+ 	class LDJClient extends EventEmitter {
+ 	  constructor(stream) {
+ 	    super();
+ 	  }
+ 	}
+LDJClient es una clase, lo que significa que otro código debe llamar a un nuevo LDJClient (secuencia) para obtener una instancia. El parámetro de flujo es un objeto que emite eventos de datos, como una conexión Socket.
+
+Dentro de la función constructora, primero llamamos super para invocar la función constructora propia de EventEmitter. Siempre que estés implementando una clase que amplíe a otra clase, debes comenzar por llamar a super, con los argumentos de constructor apropiados para ello.
+
+Es posible que le interese saber que bajo el capó, JavaScript utiliza la herencia prototípica para establecer la relación entre LDJClient y EventEmitter. La herencia prototípica es poderosa y se puede usar para más que solo clases, pero este uso es cada vez más raro.
 # Travis
