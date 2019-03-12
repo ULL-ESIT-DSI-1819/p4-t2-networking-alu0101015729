@@ -2,6 +2,9 @@
 const EventEmitter = require('events').EventEmitter;
 class LDJClient extends EventEmitter {
     constructor(stream) {
+        //Testability pregunta 3
+        if (stream === null)
+            throw new Error('Stream parameter is null, check input.');
         super();
         let buffer = '';
         stream.on('data', data => {
