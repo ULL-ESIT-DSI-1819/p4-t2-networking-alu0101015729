@@ -233,3 +233,12 @@ En el cuerpo de la prueba, configuramos un controlador de eventos de mensajes en
 # captura
 # Travis
 ![HTML](capturas/travis.png) <br>
+
+Pregunta 1 Robutness
+-Si los datos entrantes no son del formato JSON se produce un error. Esto se debe a que se espera un formato JSON y al no serlo se produce un fallo y se para el programa.
+Pregunta 2 Robutness
+-En una prueba cuando enviamos datos que no son del formato JSON se produce un fallo como se dijo anteriormente debido a que se espera el formato JSON y no cualquier otro.
+Pregunta 3 Robutness
+-No se produce ningún fallo si no se incluyera el salto de línea en el último evento de datos. Esto se debe a que no se añadiría el salto de línea pero seguiría cumpliendo con el formato JSON esperado.
+Pregunta 4 Robutness
+-LDJClient debe emitir un evento de cierre cuando se desconecta para procesar el resto del buffer. Debería hacerlo siempre pero sobretodo si el buffer no ha sido procesado completamente.
