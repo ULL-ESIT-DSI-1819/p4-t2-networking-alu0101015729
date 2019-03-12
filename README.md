@@ -159,4 +159,22 @@ LDJClient es una clase, lo que significa que otro código debe llamar a un nuevo
 Dentro de la función constructora, primero llamamos super para invocar la función constructora propia de EventEmitter. Siempre que estés implementando una clase que amplíe a otra clase, debes comenzar por llamar a super, con los argumentos de constructor apropiados para ello.
 
 Es posible que le interese saber que bajo el capó, JavaScript utiliza la herencia prototípica para establecer la relación entre LDJClient y EventEmitter. La herencia prototípica es poderosa y se puede usar para más que solo clases, pero este uso es cada vez más raro.
+# 
+
+```javascript
+	constructor(stream) {
+ 	  super();
+ 	  let buffer = '';
+ 	  stream.on('data', data => {
+ 	    buffer += data;
+ 	    let boundary = buffer.indexOf('\n');
+ 	    while (boundary !== -1) {
+ 	      const input = buffer.substring(0, boundary);
+ 	      buffer = buffer.substring(boundary + 1);
+ 	      this.emit('message', JSON.parse(input));
+ 	      boundary = buffer.indexOf('\n');
+ 	    }
+ 	  });
+ 	}
+```
 # Travis
