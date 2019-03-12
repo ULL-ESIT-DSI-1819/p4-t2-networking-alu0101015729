@@ -42,13 +42,13 @@ describe('LDJClient', () => {
     });
     done();
   });
-  it('Se envían datos que contienen JSON pero no nueva línea', done => {
+ /* it('Se envían datos que contienen JSON pero no nueva línea', done => {
     client.on('message', message => {
       assert.deepEqual(message, { foo: 'bar' });
       done();
     });
     stream.emit('data', '{"foo": "bar"}');
     stream.emit('close');
-});
+});*/
 
 });
