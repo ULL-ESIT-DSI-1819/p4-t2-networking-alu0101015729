@@ -186,7 +186,7 @@ El código dentro del controlador de eventos de datos es denso, pero no es sofis
 En este punto, el problema con el que comenzamos (el manejo de mensajes divididos) se resuelve de manera efectiva. Ya sea que aparezcan diez mensajes en un solo evento de datos o solo la mitad de uno, todos precipitarán eventos de mensaje en la instancia de LDJClient.
 # Exporting Functionality in a Module
 Vamos a reunir los ejemplos de código anteriores y exponer LDJClient como un módulo. Comience creando un directorio llamado lib. Podría nombrarlo de otra manera, pero hay una convención fuerte en la comunidad Node.js para poner código de soporte en el directorio lib.
-# captura
+![HTML](capturas/cuarta.png) <br>
 Guarde el archivo como lib / ldj-client.js. El código para este módulo es la combinación de ejemplos anteriores más un método estático: la nueva sección module.exports al final.
 
 Dentro de la definición de clase, después del constructor, estamos agregando un método estático llamado connect. Se adjunta un método estático a la propia clase LDJClient en lugar de aplicarse a instancias individuales. El método de conexión es simplemente una conveniencia para los consumidores de la biblioteca para que no tengan que usar el nuevo operador para crear una instancia de LDJClient.
@@ -195,11 +195,11 @@ En un módulo Node.js, el objeto module.exports es el puente entre el código de
 # Importing a Custom Node.js Module
 Es hora de hacer uso de nuestro módulo personalizado. Modifiquemos el cliente para usarlo en lugar de leer directamente desde la secuencia TCP.
 Abra un editor de texto e ingrese lo siguiente:
-# captura
+![HTML](capturas/quinta.png) <br>
 Guarde este archivo como net-watcher-ldj-client.js. Es similar a nuestro net-watcher-json-client de Crear conexiones de cliente de socket. La principal diferencia es que, en lugar de enviar buffers de datos directamente a JSON.parse, este programa se basa en el módulo ldj-client para producir eventos de mensajes.
 
 Para asegurarnos de que resuelve el problema del mensaje dividido, ejecutemos el servicio de prueba:
-# captura
+![HTML](capturas/sexta.png) <br>
 # Developing Unit Tests with Mocha
 Mocha es un popular marco de prueba multiparadigm para Node.js. Cuenta con varios estilos diferentes para describir sus pruebas. Usaremos el estilo de desarrollo dirigido por el comportamiento (BDD).
 Para usar Mocha, primero lo instalaremos con npm, el administrador de paquetes integrado de Node.js. A continuación, desarrollaremos una prueba unitaria para la clase LDJClient. Y finalmente usaremos npm para ejecutar el conjunto de pruebas.
@@ -220,7 +220,7 @@ Cuando el comando termine, habrá hecho algunos cambios. Ahora tendrás un direc
 Con Mocha instalado, ahora desarrollaremos una prueba unitaria que lo utiliza.
 Cree un subdirectorio llamado prueba para contener su código relacionado con la prueba. Esta es la convención para los proyectos Node.js en general, y de manera predeterminada, Mocha buscará sus pruebas allí.
 A continuación, cree un archivo en su directorio de prueba llamado ldj-client-test.js y agregue el siguiente código:
-# captura
+![HTML](capturas/septima.png) <br>
 Vayamos a través de este código. Primero, incorporamos los módulos que necesitamos, incluido el módulo de afirmación integrado de Node.js. Esto contiene funciones útiles para comparar valores.
 
 A continuación, utilizamos el método de descripción de Mocha para crear un contexto con nombre para nuestras pruebas con LDJClient. El segundo argumento a describir es una función que contiene el contenido de la prueba.
@@ -232,3 +232,4 @@ Finalmente lo llamamos para probar un comportamiento específico de la clase. Da
 En el cuerpo de la prueba, configuramos un controlador de eventos de mensajes en el cliente. Este controlador utiliza el método deepEqual para afirmar que la carga útil que recibimos coincide con nuestras expectativas. Por fin le decimos a nuestro flujo sintético que emita un evento de datos. Esto hará que nuestro manejador de mensajes se invoque en unos pocos turnos del bucle de eventos.
 # captura
 # Travis
+![HTML](capturas/travis.png) <br>
