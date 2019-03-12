@@ -159,8 +159,10 @@ LDJClient es una clase, lo que significa que otro código debe llamar a un nuevo
 Dentro de la función constructora, primero llamamos super para invocar la función constructora propia de EventEmitter. Siempre que estés implementando una clase que amplíe a otra clase, debes comenzar por llamar a super, con los argumentos de constructor apropiados para ello.
 
 Es posible que le interese saber que bajo el capó, JavaScript utiliza la herencia prototípica para establecer la relación entre LDJClient y EventEmitter. La herencia prototípica es poderosa y se puede usar para más que solo clases, pero este uso es cada vez más raro.
-# 
+# Buffering Data Events
+Es hora de usar el parámetro de flujo en el LDJClient para recuperar y almacenar la entrada. El objetivo es tomar los datos en bruto entrantes de la secuencia y convertirlos en eventos de mensaje que contengan los objetos de mensaje analizados.
 
+Echa un vistazo al siguiente constructor actualizado. Anexa fragmentos de datos entrantes a una cadena de búfer en ejecución y explora los finales de línea (que deben ser los límites de los mensajes JSON).
 ```javascript
 	constructor(stream) {
  	  super();
@@ -177,4 +179,56 @@ Es posible que le interese saber que bajo el capó, JavaScript utiliza la herenc
  	  });
  	}
 ```
+Comenzamos llamando a super, como antes, y luego configuramos una variable de cadena llamada buffer para capturar los datos entrantes. A continuación, usamos stream.on para manejar eventos de datos.
+
+El código dentro del controlador de eventos de datos es denso, pero no es sofisticado. Agregamos datos sin procesar al final del búfer y luego buscamos los mensajes completos desde el frente. Cada cadena de mensaje se envía a través de JSON.parse y, finalmente, es emitida por el LDJClient como un evento de mensaje a través de this.emit.
+
+En este punto, el problema con el que comenzamos (el manejo de mensajes divididos) se resuelve de manera efectiva. Ya sea que aparezcan diez mensajes en un solo evento de datos o solo la mitad de uno, todos precipitarán eventos de mensaje en la instancia de LDJClient.
+# Exporting Functionality in a Module
+Vamos a reunir los ejemplos de código anteriores y exponer LDJClient como un módulo. Comience creando un directorio llamado lib. Podría nombrarlo de otra manera, pero hay una convención fuerte en la comunidad Node.js para poner código de soporte en el directorio lib.
+# captura
+Guarde el archivo como lib / ldj-client.js. El código para este módulo es la combinación de ejemplos anteriores más un método estático: la nueva sección module.exports al final.
+
+Dentro de la definición de clase, después del constructor, estamos agregando un método estático llamado connect. Se adjunta un método estático a la propia clase LDJClient en lugar de aplicarse a instancias individuales. El método de conexión es simplemente una conveniencia para los consumidores de la biblioteca para que no tengan que usar el nuevo operador para crear una instancia de LDJClient.
+
+En un módulo Node.js, el objeto module.exports es el puente entre el código del módulo y el mundo exterior. Todas las propiedades que establezca en las exportaciones estarán disponibles para el código ascendente que se extrae en el módulo. En nuestro caso, estamos exportando la propia clase LDJClient.
+# Importing a Custom Node.js Module
+Es hora de hacer uso de nuestro módulo personalizado. Modifiquemos el cliente para usarlo en lugar de leer directamente desde la secuencia TCP.
+Abra un editor de texto e ingrese lo siguiente:
+# captura
+Guarde este archivo como net-watcher-ldj-client.js. Es similar a nuestro net-watcher-json-client de Crear conexiones de cliente de socket. La principal diferencia es que, en lugar de enviar buffers de datos directamente a JSON.parse, este programa se basa en el módulo ldj-client para producir eventos de mensajes.
+
+Para asegurarnos de que resuelve el problema del mensaje dividido, ejecutemos el servicio de prueba:
+# captura
+# Developing Unit Tests with Mocha
+Mocha es un popular marco de prueba multiparadigm para Node.js. Cuenta con varios estilos diferentes para describir sus pruebas. Usaremos el estilo de desarrollo dirigido por el comportamiento (BDD).
+Para usar Mocha, primero lo instalaremos con npm, el administrador de paquetes integrado de Node.js. A continuación, desarrollaremos una prueba unitaria para la clase LDJClient. Y finalmente usaremos npm para ejecutar el conjunto de pruebas.
+# Installing Mocha with npm
+La instalación de paquetes Node.js con npm puede ser bastante fácil, lo que explica en parte la abundancia de módulos disponibles para usted. Aun así, es importante entender lo que está pasando para que pueda administrar sus dependencias.
+
+npm se basa en un archivo de configuración llamado package.json, así que creamos uno ahora. Abra un terminal para su proyecto de red y ejecute esto:
+
+	npm init -y
+	npm install --save-dev --save-exact mocha@3.4.2
+Puede ignorar de forma segura las advertencias en la salida por ahora. npm solo sugiere que agregue algunos campos descriptivos a su package.json.
+Cuando el comando termine, habrá hecho algunos cambios. Ahora tendrás un directorio llamado node_modules en tu proyecto, que contiene Mocha y sus dependencias. Y si abres tu archivo package.json, deberías encontrar una sección devDependencies que se parece a esto:
+
+	"devDependencies": {
+    	"mocha": "3.4.2"
+ 	},
+# Writing Mocha Unit Tests
+Con Mocha instalado, ahora desarrollaremos una prueba unitaria que lo utiliza.
+Cree un subdirectorio llamado prueba para contener su código relacionado con la prueba. Esta es la convención para los proyectos Node.js en general, y de manera predeterminada, Mocha buscará sus pruebas allí.
+A continuación, cree un archivo en su directorio de prueba llamado ldj-client-test.js y agregue el siguiente código:
+# captura
+Vayamos a través de este código. Primero, incorporamos los módulos que necesitamos, incluido el módulo de afirmación integrado de Node.js. Esto contiene funciones útiles para comparar valores.
+
+A continuación, utilizamos el método de descripción de Mocha para crear un contexto con nombre para nuestras pruebas con LDJClient. El segundo argumento a describir es una función que contiene el contenido de la prueba.
+
+Dentro de la prueba, primero declaramos dos variables con let: una para la instancia LDJClient, cliente, y otra para el EventEmitter subyacente, secuencia. Luego, en beforeEach, asignamos nuevas instancias a ambas variables.
+
+Finalmente lo llamamos para probar un comportamiento específico de la clase. Dado que nuestra clase es asíncrona por naturaleza, invocamos la devolución de llamada realizada que Mocha proporciona para indicar cuando la prueba ha finalizado.
+
+En el cuerpo de la prueba, configuramos un controlador de eventos de mensajes en el cliente. Este controlador utiliza el método deepEqual para afirmar que la carga útil que recibimos coincide con nuestras expectativas. Por fin le decimos a nuestro flujo sintético que emita un evento de datos. Esto hará que nuestro manejador de mensajes se invoque en unos pocos turnos del bucle de eventos.
+# captura
 # Travis
