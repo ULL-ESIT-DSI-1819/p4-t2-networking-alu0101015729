@@ -230,15 +230,17 @@ Dentro de la prueba, primero declaramos dos variables con let: una para la insta
 Finalmente lo llamamos para probar un comportamiento específico de la clase. Dado que nuestra clase es asíncrona por naturaleza, invocamos la devolución de llamada realizada que Mocha proporciona para indicar cuando la prueba ha finalizado.
 
 En el cuerpo de la prueba, configuramos un controlador de eventos de mensajes en el cliente. Este controlador utiliza el método deepEqual para afirmar que la carga útil que recibimos coincide con nuestras expectativas. Por fin le decimos a nuestro flujo sintético que emita un evento de datos. Esto hará que nuestro manejador de mensajes se invoque en unos pocos turnos del bucle de eventos.
-# captura
 # Travis
 ![HTML](capturas/travis.png) <br>
 
 Pregunta 1 Robutness
 -Si los datos entrantes no son del formato JSON se produce un error. Esto se debe a que se espera un formato JSON y al no serlo se produce un fallo y se para el programa.
+
 Pregunta 2 Robutness
 -En una prueba cuando enviamos datos que no son del formato JSON se produce un fallo como se dijo anteriormente debido a que se espera el formato JSON y no cualquier otro.
+
 Pregunta 3 Robutness
 -No se produce ningún fallo si no se incluyera el salto de línea en el último evento de datos. Esto se debe a que no se añadiría el salto de línea pero seguiría cumpliendo con el formato JSON esperado.
+
 Pregunta 4 Robutness
 -LDJClient debe emitir un evento de cierre cuando se desconecta para procesar el resto del buffer. Debería hacerlo siempre pero sobretodo si el buffer no ha sido procesado completamente.
