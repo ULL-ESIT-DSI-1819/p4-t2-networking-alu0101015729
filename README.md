@@ -230,7 +230,6 @@ Dentro de la prueba, primero declaramos dos variables con let: una para la insta
 Finalmente lo llamamos para probar un comportamiento específico de la clase. Dado que nuestra clase es asíncrona por naturaleza, invocamos la devolución de llamada realizada que Mocha proporciona para indicar cuando la prueba ha finalizado.
 
 En el cuerpo de la prueba, configuramos un controlador de eventos de mensajes en el cliente. Este controlador utiliza el método deepEqual para afirmar que la carga útil que recibimos coincide con nuestras expectativas. Por fin le decimos a nuestro flujo sintético que emita un evento de datos. Esto hará que nuestro manejador de mensajes se invoque en unos pocos turnos del bucle de eventos.
-# captura
 # Travis
 ![HTML](capturas/travis.png) <br>
 
